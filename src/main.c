@@ -6,7 +6,7 @@ int main() {
     WINDOW *main_scr = initscr();
     cbreak();  /* Turns off line buffering, but it doesnt
                   turn off interpretation of signal
-                  genersring characters. */
+                  generating characters unlike raw(). */
 
     noecho();  /* Prevents input character from being
                   printed (echoed) onto the screen. */
