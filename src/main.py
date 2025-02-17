@@ -1,31 +1,34 @@
 import curses
-import time
-from enum import Enum
+from time import monotonic
+import random
 
-class Direction(Enum):
-    UP = 0
-    LEFT = 1
-    DOWN = 2
-    RIGHT = 3
+# Input and timing: done
+# Game logic:
+# Output:
+
+class Coord:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
 
 def main(stdscr):
-    KEY_TO_DIR = {
-        "w": Direction.UP,
-        "a": Direction.LEFT,
-        "s": Direction.DOWN,
-        "d": Direction.RIGHT
-    }
+    KEY_TO_DIR = {"w": 0, "a": 1, "s": 2, "d": 3}
     rows, cols = stdscr.getmaxyx()
-    user_input, old_input = -1, -1
-    score = 0
-    direction = Direction.RIGHT
-    coord = [int(cols/ 2), int(rows / 2)]
+    food = []
+    snake = [Coord(cols // 2, rows // 2)]
+    direction = 3
+    is_dead = False
+    t0 = 0.0
+    user_input = 0
 
+    random.seed(int(monotonic()))
     stdscr.nodelay(True)
+    curses.curs_set(0)
 
-    while True:
-        t0 = time.monotonic()
-        while time.monotonic() - t0 <= .25:
+    while not is_dead:
+        t0 = monotonic()
+        while monotonic() - t0 <= .25:
             user_input = stdscr.getch()
             if user_input == curses.ERR:
                 continue
@@ -35,32 +38,47 @@ def main(stdscr):
                 continue
 
             user_input = KEY_TO_DIR[user_input]
-            if (user_input.value + 2) % 4 == direction.value:
+            if (user_input + 2) % 4 == direction\
+                    or user_input == direction:
                 continue
-            elif user_input != direction:
-                direction = user_input
-                break
+
+            direction = user_input
+            break 
 
         match direction:
-            case Direction.UP:
-                coord[1] -= 1
-            case Direction.LEFT:
-                coord[0] -= 1
-            case Direction.DOWN:
-                coord[1] += 1
-            case Direction.RIGHT:
-                coord[0] += 1
-        
+            case 0:
+                snake[0].y -= 1
+            case 1:
+                snake[0].x -= 1
+            case 2:
+                snake[0].y += 1
+            case 3:
+                snake[0].x += 1
+
+        if snake[0].x == 0 or snake[0].x == cols - 1\
+                or snake[0].y == 2 or snake[0].y == rows - 1:
+            is_dead = True
+
+        if snake[0] in food:
+            snake.append(snake[-2] - 2*snake[-1]) 
+
         stdscr.erase()
-        stdscr.border("|", "|", "-", "-", "/", "\\",
-                      "\\", "/")
-        stdscr.addstr(1, 1, f"Score: {score}") 
-        
+        stdscr.border("|", "|", "-", "-", "+", "+", "+", "+")
+        stdscr.hline(2, 1, "-", cols - 2)
+        stdscr.addstr(1, 1, f"Score: {len(snake) - 1}")
 
-        stdscr.addch(coord[1], coord[0], "#")
+        stdscr.addch(snake[0].y, snake[0].x,
+                     "X" if is_dead else "O")
 
-        old_input = user_input
+        for s in snake[1:]:
+            stdscr.addch(s.y, s.x, "+" if is_dead else "#")
+
         stdscr.refresh()
+
+    curses.curs_set(1)
+    stdscr.nodelay(False)
+    stdscr.addstr(rows // 2, 1, "You've lost")
+    stdscr.getch()
 
 
 if __name__ == "__main__":
