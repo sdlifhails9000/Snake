@@ -1,32 +1,38 @@
 import curses
-from time import monotonic
 import random
 
+from time import monotonic
+
 # Input and timing: done
-# Game logic:
-# Output:
+# Game logic: Done
+# Output: Done
 
 class Coord:
-    def __init__(self, x, y):
+    def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
+    
+    def __eq__(self, c):
+        return c.x == self.x and c.y == self.y
 
 
 def main(stdscr):
     KEY_TO_DIR = {"w": 0, "a": 1, "s": 2, "d": 3}
     rows, cols = stdscr.getmaxyx()
-    food = []
-    snake = [Coord(cols // 2, rows // 2)]
+    snake = [
+        Coord(cols // 2, rows // 2),
+        Coord(cols // 2 - 1, rows // 2),
+    ]
     direction = 3
     is_dead = False
-    t0 = 0.0
-    user_input = 0
 
-    random.seed(int(monotonic()))
+    random.seed(monotonic())
     stdscr.nodelay(True)
     curses.curs_set(0)
 
+    foods = []
     while not is_dead:
+        ########## Input and timing
         t0 = monotonic()
         while monotonic() - t0 <= .25:
             user_input = stdscr.getch()
@@ -45,6 +51,11 @@ def main(stdscr):
             direction = user_input
             break 
 
+        ########## Game logic
+        for i in reversed(range(1, len(snake))):
+            snake[i].x = snake[i-1].x
+            snake[i].y = snake[i-1].y
+
         match direction:
             case 0:
                 snake[0].y -= 1
@@ -59,25 +70,42 @@ def main(stdscr):
                 or snake[0].y == 2 or snake[0].y == rows - 1:
             is_dead = True
 
-        if snake[0] in food:
-            snake.append(snake[-2] - 2*snake[-1]) 
+        if snake[0] in snake[1:]:
+            is_dead = True
 
+        if snake[0] in foods:
+            snake.append(
+                    Coord(2*snake[-1].x - snake[-2].x,
+                          2*snake[-1].y - snake[-2].y))
+            foods.remove(snake[0])
+
+        if monotonic() % 5 >= 4.9:
+            food = Coord()
+            food.x = random.randint(1, cols - 2)
+            food.y = random.randint(3, rows - 2)
+            if food not in snake and food not in foods:
+                foods.append(food)
+
+        ########## Output
         stdscr.erase()
         stdscr.border("|", "|", "-", "-", "+", "+", "+", "+")
         stdscr.hline(2, 1, "-", cols - 2)
         stdscr.addstr(1, 1, f"Score: {len(snake) - 1}")
 
+        for f in foods:
+            stdscr.addch(f.y, f.x, "*")
+
+        for i in range(1, len(snake)):
+            stdscr.addch(
+                snake[i].y, snake[i].x, "+" if is_dead else "#")
+
         stdscr.addch(snake[0].y, snake[0].x,
                      "X" if is_dead else "O")
 
-        for s in snake[1:]:
-            stdscr.addch(s.y, s.x, "+" if is_dead else "#")
-
         stdscr.refresh()
 
-    curses.curs_set(1)
     stdscr.nodelay(False)
-    stdscr.addstr(rows // 2, 1, "You've lost")
+    stdscr.addstr(1, cols // 2, "You've lost")
     stdscr.getch()
 
 
