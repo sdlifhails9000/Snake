@@ -66,10 +66,12 @@ def main(stdscr):
             case 3:
                 snake[0].x += 1
 
+        # Wall collision
         if snake[0].x == 0 or snake[0].x == cols - 1\
                 or snake[0].y == 2 or snake[0].y == rows - 1:
             is_dead = True
 
+        # Self collision
         if snake[0] in snake[1:]:
             is_dead = True
 
@@ -79,7 +81,7 @@ def main(stdscr):
                           2*snake[-1].y - snake[-2].y))
             foods.remove(snake[0])
 
-        if monotonic() % 5 >= 4.9:
+        if monotonic() % 5 >= 4.7:
             food = Coord()
             food.x = random.randint(1, cols - 2)
             food.y = random.randint(3, rows - 2)
