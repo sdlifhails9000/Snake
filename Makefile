@@ -1,29 +1,17 @@
 CC := gcc
-LINKER_OPTIONS := -Wall -I./inc
-COMPILER_OPTIONS := -lncurses
-
-BIN = ./bin
-
-SRCS = snake.c main.c
-OBJS = $(SRCS:%.c=$(BIN)/%.o)
+CC_OPTIONS := -Wall -lncurses
 
 .PHONY: all
-all: $(BIN) $(BIN)/main
+all: main
 
-$(BIN):
-	mkdir $@
-
-$(BIN)/main: $(OBJS)
-	$(CC) $(COMPILER_OPTIONS) -o $@ $^
-
-$(BIN)/%.o: %.c
-	$(CC) $(LINKER_OPTIONS) -c -o $@ $<
+main: main.c
+	$(CC) $(CC_OPTIONS) -o $@ $^
 
 .PHONY: clean
 clean:
-	rm -r $(BIN)
+	rm -r main
 
 .PHONY: run
 run:
-	$(BIN)/main
+	./main
 
