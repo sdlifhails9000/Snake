@@ -1,6 +1,6 @@
 #include <ncurses.h>
-#include <stdlib.h> /* srandom(), random() */
-#include <time.h> /* clock_t, clock() */
+#include <stdlib.h> /* srandom(), random(), malloc(), free() */
+#include <time.h> /* clock_t, clock(), time() */
 
 enum direction {
     UP, LEFT, DOWN, RIGHT
@@ -24,7 +24,7 @@ int main() {
     body[0] = (struct point){ .x=(int)(MAX_COLS / 2), .y=(int)(MAX_ROWS / 2) };
     body[1] = (struct point){ .x=(int)(MAX_COLS / 2 - 1), .y=(int)(MAX_ROWS / 2) };
     int tail = 1;
-    int is_dead = 0;
+    int is_dead = FALSE;
     enum direction dir = RIGHT;
 
     srandom(time(NULL));
@@ -34,10 +34,30 @@ int main() {
     keypad(mainwin, TRUE);
     nodelay(mainwin, TRUE);
 
-    struct point food = {};
-    food.x = random() % (MAX_COLS - 4) + 1;
-    food.y = random() % (MAX_ROWS - 6) + 3;
-    while (!is_dead) {
+    struct point food = {
+        .x = (int)(MAX_COLS / 2) + 5,
+        .y = (int)(MAX_ROWS / 2)
+    };
+    while (TRUE) {
+        /***** Output *****/
+        erase();
+        border('|', '|', '-', '-', '+', '+', '+', '+');
+        mvhline(2, 1, '-', MAX_COLS - 2);
+        mvprintw(1, 1, "Score: %d", tail);
+
+        mvaddch(food.y, food.x, '*');
+
+        body_seg = is_dead ? '+' : '#';
+        for (int i = 1; i <= tail; i++)
+            mvaddch(body[i].y, body[i].x, body_seg);
+
+        mvaddch(body[0].y, body[0].x, is_dead ? 'X' : 'O');
+
+        refresh();
+        
+        if (is_dead)
+            break;
+
         /***** Input and timing *****/
         t0 = clock();
         while (clock() - t0 <= 250000) {
@@ -71,9 +91,8 @@ int main() {
         }
 
         /***** Game Logic *****/
-        for (int i = tail; i > 0; i--) {
+        for (int i = tail; i > 0; i--)
             body[i] = body[i-1];
-        }
 
         switch (dir) {
         case UP:
@@ -90,40 +109,21 @@ int main() {
             break;
         }
 
-        is_dead = body[0].x % (MAX_COLS - 1) == 0 ||
-            (body[0].y - 2) % (MAX_ROWS - 3) == 0;
-
-        for (int i = 1; i <= tail; i++) {
-            if (body[0].x == body[i].x &&
-                    body[0].y == body[i].y) {
-                is_dead = 1;
-                break;
-            }
-        }
-
-        if (body[0].x == food.x && body[0].y == food.y) {
+        switch (mvinch(body[0].y, body[0].x)) {
+        case '*':
             tail++;
             body[tail].x = 2*body[tail-1].x - body[tail-2].x;
             body[tail].y = 2*body[tail-1].y - body[tail-2].y;
-            food.x = random() % (MAX_COLS - 4) + 1;
-            food.y = random() % (MAX_ROWS - 6) + 3;
+            do {
+                food.x = random() % (MAX_COLS - 4) + 1;
+                food.y = random() % (MAX_ROWS - 6) + 3;
+            } while (mvinch(food.y, food.x) == 'O' || mvinch(food.y, food.x) == '#');
+            break;
+        case '#':
+        case '-':
+        case '|':
+            is_dead = 1;
         }
-
-        /***** Output *****/
-        erase();
-        border('|', '|', '-', '-', '+', '+', '+', '+');
-        mvhline(2, 1, '-', MAX_COLS - 2);
-        mvprintw(1, 1, "Score: %d", tail);
-
-        mvaddch(food.y, food.x, '*');
-
-        body_seg = is_dead ? '+' : '#';
-        for (int i = 1; i <= tail; i++)
-            mvaddch(body[i].y, body[i].x, body_seg);
-
-        mvaddch(body[0].y, body[0].x, is_dead ? 'X' : 'O');
-
-        refresh();
     }
 
     nodelay(mainwin, FALSE);
@@ -131,6 +131,7 @@ int main() {
     getch();
    
     endwin();
+    free(body);
     return 0;
 }
 
