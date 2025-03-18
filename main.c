@@ -123,8 +123,8 @@ int main() {
         switch (mvinch(body[0].y, body[0].x)) {
         case '*':
             tail++;
-            body[tail].x = 2*body[tail-1].x - body[tail-2].x;
-            body[tail].y = 2*body[tail-1].y - body[tail-2].y;
+            body[tail].x = body[tail-1].x;
+            body[tail].y = body[tail-1].y;
             food = generate_food(MAX_ROWS, MAX_COLS);
             break;
         case '#':
