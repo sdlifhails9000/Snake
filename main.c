@@ -10,6 +10,31 @@ struct point {
     int x, y;
 };
 
+struct point generate_food(int max_rows, int max_cols) {
+    struct point retval = {0};
+    do {
+        retval.x = random() % (max_cols - 4) + 1;
+        retval.y = random() % (max_rows - 6) + 3;
+    } while (mvinch(retval.y, retval.x) == 'O' || mvinch(retval.y, retval.x) == '#');
+
+    return retval;
+}
+
+enum direction key_to_direction(int input) {
+    switch (input) {
+    case 'w':
+        return UP;
+    case 'a':
+        return LEFT;
+    case 's':
+        return DOWN;
+    case 'd':
+        return RIGHT;
+    default:
+        return -1;
+    }
+}
+
 int main() {
     WINDOW *mainwin = initscr();
     int MAX_ROWS = 0, MAX_COLS = 0;
@@ -64,23 +89,9 @@ int main() {
             user_input = getch();
             if (user_input == ERR)
                 continue;
-
-            switch ((char)user_input) {
-            case 'w':
-                new_dir = 0;
-                break;
-            case 'a':
-                new_dir = 1;
-                break;
-            case 's':
-                new_dir = 2;
-                break;
-            case 'd':
-                new_dir = 3;
-                break;
-            default:
+            
+            if ((int)(new_dir = key_to_direction(user_input)) == -1)
                 continue;
-            }
 
             /* check if new and old direction are parallel */
             if (((dir + new_dir) & 0x1) == 0)
@@ -114,10 +125,7 @@ int main() {
             tail++;
             body[tail].x = 2*body[tail-1].x - body[tail-2].x;
             body[tail].y = 2*body[tail-1].y - body[tail-2].y;
-            do {
-                food.x = random() % (MAX_COLS - 4) + 1;
-                food.y = random() % (MAX_ROWS - 6) + 3;
-            } while (mvinch(food.y, food.x) == 'O' || mvinch(food.y, food.x) == '#');
+            food = generate_food(MAX_ROWS, MAX_COLS);
             break;
         case '#':
         case '-':
