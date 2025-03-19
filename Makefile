@@ -1,16 +1,26 @@
 CC := gcc
-CC_OPTIONS := -Wall -Wextra -std=c11 -lncurses
+CCFLAGS := -Wall -Wextra -std=c11 
+LDFLAGS =
+
+LIB = ncurses 
+LDFLAGS += -l$(LIB) 
+
+INC = inc
+CCFLAGS += -I$(INC)
+
+SRCS = main.c snake.c
+OBJS = $(SRCS:.c=.o)
 
 .PHONY: all
-all: main
+all: main $(OBJS)
 
-main: main.c
-	$(CC) $(CC_OPTIONS) -o $@ $<
+main: $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
+
+%.o: %.c
+	$(CC) $(CCFLAGS) -c -o $@ $<
 
 .PHONY: clean
 clean:
-	rm main
+	rm main $(OBJS)
 
-.PHONY: run
-run:
-	./main
