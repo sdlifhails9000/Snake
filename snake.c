@@ -16,9 +16,9 @@ void fini_player(struct player *p) {
 }
 
 void add_segment(struct player *p) {
+    p->body[p->length].x = p->body[p->length-1].x;
+    p->body[p->length].y = p->body[p->length-1].y;
     p->length++;
-    p->body[p->length-1].x = p->body[p->length-2].x;
-    p->body[p->length-1].y = p->body[p->length-2].y;
 }
 
 void update_body(struct player *p) {

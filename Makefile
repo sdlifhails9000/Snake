@@ -1,5 +1,5 @@
-CC := gcc
-CCFLAGS := -Wall -Wextra -std=c11 
+CC = gcc
+CCFLAGS = -Wall -Wextra -std=c11 
 LDFLAGS =
 
 LIB = ncurses 

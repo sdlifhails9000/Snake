@@ -5,8 +5,8 @@
 
 enum direction {
     UP,
-    DOWN,
     LEFT,
+    DOWN,
     RIGHT
 };
 

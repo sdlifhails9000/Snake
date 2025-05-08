@@ -60,26 +60,7 @@ int main() {
         .y = (int)(MAX_ROWS / 2)
     };
 
-    while (true) {
-        /***** Output *****/
-        erase();
-        border('|', '|', '-', '-', '+', '+', '+', '+');
-        mvhline(2, 1, '-', MAX_COLS - 2);
-        mvprintw(1, 1, "Score: %d", p.length-1);
-
-        mvaddch(food.y, food.x, '*');
-
-        body_seg = p.is_dead ? '+' : '#';
-        for (int i = 1; i <= p.length; i++)
-            mvaddch(p.body[i].y, p.body[i].x, body_seg);
-
-        mvaddch(p.body[0].y, p.body[0].x, p.is_dead ? 'X' : 'O');
-
-        refresh();
-        
-        if (p.is_dead)
-            break;
-
+    while (!p.is_dead) {
         /***** Input and timing *****/
         t0 = clock();
         while (clock() - t0 <= 250000) {
@@ -111,6 +92,22 @@ int main() {
         case '|':
             p.is_dead = true;
         }
+
+        /***** Output *****/
+        erase();
+        border('|', '|', '-', '-', '+', '+', '+', '+');
+        mvhline(2, 1, '-', MAX_COLS - 2);
+        mvprintw(1, 1, "Score: %d", p.length-1);
+
+        mvaddch(food.y, food.x, '*');
+
+        body_seg = p.is_dead ? '+' : '#';
+        for (int i = 1; i < p.length; i++)
+            mvaddch(p.body[i].y, p.body[i].x, body_seg);
+
+        mvaddch(p.body[0].y, p.body[0].x, p.is_dead ? 'X' : 'O');
+
+        refresh();
     }
 
     nodelay(mainwin, false);
